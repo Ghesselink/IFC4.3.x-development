@@ -138,6 +138,7 @@ jobs:
             ifc43/output/psd/
             ifc43/output/bsdd/
             ifc43/output/structure.json
+            ifc43/code/inheritance_listing.txt
           retention-days: 7
 
   # ── Job 3 (×8) ─────────────────────────────────────────────────────────────
@@ -212,7 +213,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: generator-output
-          path: ifc43/output/
+          path: ifc43/
 
       - name: Render shard ${{ matrix.shard }}/8
         working-directory: ifc43/code
@@ -373,7 +374,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: generator-output
-          path: ifc43/output/
+          path: ifc43/
 
       - name: Check out translations
         if: needs.check-cache.outputs.hit != 'true'
