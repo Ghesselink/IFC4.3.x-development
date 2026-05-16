@@ -284,8 +284,13 @@ jobs:
               echo "TARGET_SITE_DIR=${GITHUB_WORKSPACE}/output-repo/IFC/RELEASE/IFC4_4" >> "$GITHUB_ENV"
               ;;
             *)
-              echo "Unsupported branch: ${GITHUB_REF_NAME}"
-              exit 1
+              if [ "${{ github.repository_owner }}" != "buildingSMART" ]; then
+                echo "Fork context (${{ github.repository_owner }}): defaulting to IFC4_4 subdir for branch '${GITHUB_REF_NAME}'"
+                echo "TARGET_SITE_DIR=${GITHUB_WORKSPACE}/output-repo/IFC/RELEASE/IFC4_4" >> "$GITHUB_ENV"
+              else
+                echo "::error::Unsupported branch on upstream repo: ${GITHUB_REF_NAME}"
+                exit 1
+              fi
               ;;
           esac
 
@@ -305,7 +310,12 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          repository: buildingSMART/IFC4.3.x-output-2
+          # Auto-resolve the output repo based on which fork is running.
+          # Upstream (buildingSMART) pushes to the production output-2 repo;
+          # any other owner pushes to <owner>/IFC4.3.x-output-2 (the standard
+          # fork-of-output-2 convention). This makes the workflow usable on
+          # contributor forks for preview deploys without any per-fork edits.
+          repository: ${{ github.repository_owner == 'buildingSMART' && 'buildingSMART/IFC4.3.x-output-2' || format('{0}/IFC4.3.x-output-2', github.repository_owner) }}
           path: output-repo
           fetch-depth: 1
           token: ${{ secrets.OUTPUT_2_TOKEN }}
