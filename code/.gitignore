@@ -7,3 +7,9 @@ entity_supertype.json
 entity_to_package.json
 hierarchy.json
 inheritance_listing.txt
+# Written by code/generators/html/builder.py::_write_listing_json during the
+# assemble pass. Lives under code/ for historical reasons (server.py serves
+# them from there in dev mode). Ignored so build runs don't dirty the tree.
+listing_figures.json
+listing_references.json
+listing_tables.json

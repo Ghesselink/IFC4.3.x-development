@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import os
 from pathlib import Path
 
@@ -13,6 +13,10 @@ class BuildConfig:
     threads: int = 1
     sample_percent: float = 100.0
     profile: bool = False
+    shard: str | None = None
+    collector_output: Path | None = None
+    collector_inputs: list[Path] = field(default_factory=list)
+    skip_content: bool = False
 
     @classmethod
     def from_repo_root(
@@ -22,6 +26,10 @@ class BuildConfig:
         threads: int | None = None,
         sample_percent: float | None = None,
         profile: bool = False,
+        shard: str | None = None,
+        collector_output: Path | None = None,
+        collector_inputs: list[Path] | None = None,
+        skip_content: bool = False,
     ) -> "BuildConfig":
         repo_root = repo_root.resolve()
         code_dir = (repo_root / "code").resolve()
@@ -38,4 +46,8 @@ class BuildConfig:
             threads=max(1, threads),
             sample_percent=max(0.1, min(100.0, sample_percent)),
             profile=profile,
+            shard=shard,
+            collector_output=Path(collector_output).resolve() if collector_output is not None else None,
+            collector_inputs=list(collector_inputs) if collector_inputs is not None else [],
+            skip_content=skip_content,
         )

@@ -2074,8 +2074,41 @@ class StaticSiteBuilder:
         
         self.name_to_number = name_to_number()
 
-        self._copy_static_support_files()
-        self._render_html_paths(self._content_paths(), collect=True, resource_names=resource_names)
+        # Shards (collector_output set) skip the asset copy: ~818 files / 32 MB
+        # of docs/assets, docs/figures, examples/models, output/bsdd and the
+        # generated .exp/.xsd/psd.zip don't need to live in each shard's output
+        # dir — only the final assembled tree needs them, which the assemble
+        # pass (collector_output=None, skip_content=True) handles below.
+        # A non-sharded build (collector_output=None, skip_content=False) also
+        # falls into the `else` branch and copies as before.
+        if self.config.collector_output is None:
+            self._copy_static_support_files()
+
+        if not self.config.skip_content:
+            self._render_html_paths(self._content_paths(), collect=True, resource_names=resource_names)
+
+        if self.config.collector_output is not None:
+            self.config.collector_output.parent.mkdir(parents=True, exist_ok=True)
+            self.config.collector_output.write_text(
+                json.dumps(self.collector.payloads()), encoding="utf-8"
+            )
+            return {"written": 0, "errors": len(self.errors)}
+
+        if self.config.collector_inputs:
+            for ci_path in self.config.collector_inputs:
+                data = json.loads(Path(ci_path).read_text(encoding="utf-8"))
+                self.collector.references.update(
+                    (item["title"], item["number"], item["url"])
+                    for item in data.get("references", [])
+                )
+                self.collector.figures.update(
+                    (item["title"], item["number"], item["url"])
+                    for item in data.get("figures", [])
+                )
+                self.collector.tables.update(
+                    (item["title"], item["number"], item["url"])
+                    for item in data.get("tables", [])
+                )
 
         payloads = self.collector.payloads()
         self._write_listing_json(payloads)
@@ -2231,6 +2264,14 @@ class StaticSiteBuilder:
         listing_payloads: dict[str, list[dict[str, str]]] | None = None,
         resource_names: tuple[str, ...],
     ) -> None:
+        if self.config.shard:
+            import zlib
+            shard_i, shard_n = map(int, self.config.shard.split("/"))
+            public_paths = [
+                p for p in public_paths
+                if (zlib.crc32(p.encode()) & 0xFFFFFFFF) % shard_n == shard_i
+            ]
+
         if self.config.profile or self.config.threads == 1:
             for public_path in public_paths:
                 try:

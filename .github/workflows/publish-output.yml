@@ -12,80 +12,66 @@ permissions:
 
 concurrency:
   group: publish-ifc-output-${{ github.ref_name }}
-  cancel-in-progress: false
+  cancel-in-progress: true
+
+env:
+  PYTHONUNBUFFERED: "1"
+  PYTHONHASHSEED: "0"
+  # Used by code/generators/html/builder.py to populate "Edit on GitHub" links.
+  # Without this it defaults to "xmi-refresh" — a private debug branch.
+  REPO_BRANCH: ${{ github.ref_name }}
 
 jobs:
-  publish:
+  # ── Job 1 ──────────────────────────────────────────────────────────────────
+  # Compute the build cache key. If a cached HTML tarball already exists for
+  # the current schemas+code+docs state, assemble can skip straight to publish.
+  check-cache:
     runs-on: ubuntu-22.04
-    timeout-minutes: 120
-    env:
-      REPO_DIR: ${{ github.workspace }}/ifc43
-      TRANSLATIONS_SRC_DIR: ${{ github.workspace }}/translations/translations
-      TRANSLATIONS_BUILD_DIR: ${{ github.workspace }}/translations-build
-      PO_HASH_PATH: ${{ github.workspace }}/translations-build/po_hash_map.json
-      PYTHONUNBUFFERED: "1"
-
+    outputs:
+      hit: ${{ steps.cache-check.outputs.cache-hit }}
+      cache-key: ${{ steps.cache-key.outputs.key }}
     steps:
-      - name: Set target site directory
-        shell: bash
-        run: |
-          set -euxo pipefail
-
-          case "${GITHUB_REF_NAME}" in
-            ifc4.3-main)
-              echo "TARGET_SITE_DIR=${GITHUB_WORKSPACE}/output-repo/IFC/RELEASE/IFC4_3" >> "$GITHUB_ENV"
-              ;;
-            ifc4.4-main)
-              echo "TARGET_SITE_DIR=${GITHUB_WORKSPACE}/output-repo/IFC/RELEASE/IFC4_4" >> "$GITHUB_ENV"
-              ;;
-            *)
-              echo "Unsupported branch: ${GITHUB_REF_NAME}"
-              exit 1
-              ;;
-          esac
-
-      - name: Check out source repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           path: ifc43
           fetch-depth: 1
 
-      - name: Capture source commit message
+      - name: Compute cache key
+        id: cache-key
         working-directory: ifc43
         shell: bash
         run: |
-          set -euxo pipefail
-          {
-            echo "SOURCE_COMMIT_MESSAGE<<EOF"
-            git log -1 --pretty=%B
-            echo "EOF"
-          } >> "$GITHUB_ENV"
+          # The key is scoped per ref so the ifc4.3-main / ifc4.4-main caches
+          # don't collide (REPO_BRANCH is baked into the rendered HTML so the
+          # cached tarball is branch-specific). 'content/' is included because
+          # the HTML builder reads markdown from there (bibliography, foreword,
+          # scope, etc.) and changes must invalidate the cache.
+          KEY="html-${GITHUB_REF_NAME}-$(git ls-tree HEAD schemas docs content code code/requirements.txt | sha256sum | cut -c1-16)"
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
 
-      - name: Check out sample models
-        uses: actions/checkout@v4
+      - name: Check for existing HTML cache
+        id: cache-check
+        uses: actions/cache/restore@v4
         with:
-          repository: buildingSMART/IFC4.3.x-sample-models
-          path: examples
+          path: html-output.tar
+          key: ${{ steps.cache-key.outputs.key }}
+          lookup-only: true
+
+  # ── Job 2 ──────────────────────────────────────────────────────────────────
+  # Run all non-HTML generators (express, pset, bsdd, json) and upload their
+  # outputs as a single artifact consumed by every render shard.
+  prepare:
+    needs: check-cache
+    if: needs.check-cache.outputs.hit != 'true'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ifc43
           fetch-depth: 1
 
-      - name: Check out translations
-        uses: actions/checkout@v4
-        with:
-          repository: buildingSMART/IFC4.3.x-output
-          ref: translations
-          path: translations
-          fetch-depth: 1
-
-      - name: Check out output repository
-        uses: actions/checkout@v4
-        with:
-          repository: buildingSMART/IFC4.3.x-output-2
-          path: output-repo
-          fetch-depth: 1
-          token: ${{ secrets.OUTPUT_2_TOKEN }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
@@ -103,9 +89,9 @@ jobs:
         run: |
           set -euxo pipefail
           python -m pip install --upgrade pip
-          python -m pip install "Cython<3" wheel setuptools
+          python -m pip install wheel setuptools
           python -m pip install --no-build-isolation "PyYAML==6.0"
-          python -m pip install --no-build-isolation reversestem
+          python -m pip install reversestem
           python -m pip install -r ifc43/code/requirements.txt nltk
           python -m pip install ifcopenshell
 
@@ -119,7 +105,7 @@ jobs:
             --with-xsd \
             --xsd-output ../output/IFC.xsd
 
-      - name: Generate property sets
+      - name: Generate property sets (PSD)
         working-directory: ifc43/code
         shell: bash
         run: |
@@ -134,24 +120,341 @@ jobs:
           set -euxo pipefail
           python -m generators.bsdd ../schemas/ifc4x3_add2.uml --output ../output/bsdd
 
-      - name: Generate JSON schema structure
+      - name: Generate JSON structure (structure.json)
         working-directory: ifc43/code
         shell: bash
         run: |
           set -euxo pipefail
-          python -m generators.json ../schemas/ifc4x3_add2.uml ../output/psd --output ../output/structure.json
+          python -m generators.json ../schemas/ifc4x3_add2.uml ../output/psd \
+            --output ../output/structure.json
 
-      - name: Build static HTML site
+      - name: Upload generator outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: generator-output
+          path: |
+            ifc43/output/IFC.exp
+            ifc43/output/IFC.xsd
+            ifc43/output/psd/
+            ifc43/output/bsdd/
+            ifc43/output/structure.json
+          retention-days: 7
+
+  # ── Job 3 (×8) ─────────────────────────────────────────────────────────────
+  # Render one eighth of the HTML content pages in parallel. Each shard dumps
+  # its ListingCollector data to a JSON file for the assemble step.
+  render:
+    needs: [check-cache, prepare]
+    if: needs.check-cache.outputs.hit != 'true'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    env:
+      TRANSLATIONS_SRC_DIR: ${{ github.workspace }}/translations/translations
+      TRANSLATIONS_BUILD_DIR: ${{ github.workspace }}/translations-build
+      PO_HASH_PATH: ${{ github.workspace }}/translations-build/po_hash_map.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ifc43
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: buildingSMART/IFC4.3.x-sample-models
+          path: examples
+          fetch-depth: 1
+
+      - name: Check out translations
+        uses: actions/checkout@v4
+        with:
+          repository: buildingSMART/IFC4.3.x-output
+          ref: translations
+          path: translations
+          fetch-depth: 1
+
+      - name: Cache compiled translations
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.TRANSLATIONS_BUILD_DIR }}
+          # No restore-keys fallback: a stale build from a different .po set
+          # is worse than recompiling. The key is content-keyed on the .po files.
+          key: translations-${{ hashFiles('translations/translations/**/*.po') }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: ifc43/code/requirements.txt
+
+      - name: Install system dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y graphviz rsync unzip
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install wheel setuptools
+          python -m pip install --no-build-isolation "PyYAML==6.0"
+          python -m pip install reversestem
+          python -m pip install -r ifc43/code/requirements.txt nltk
+          python -m pip install ifcopenshell
+
+      - name: Download generator outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: generator-output
+          path: ifc43/output/
+
+      - name: Render shard ${{ matrix.shard }}/8
         working-directory: ifc43/code
         shell: bash
         run: |
           set -euxo pipefail
-          python -m generators.html --output ../output/html -j 4
+          mkdir -p ../shard-output
+          python -m generators.html \
+            --output ../shard-output \
+            --shard ${{ matrix.shard }}/8 \
+            --collector-output ../collector-${{ matrix.shard }}.json \
+            -j 4
 
+      - name: Upload shard output
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-shard-${{ matrix.shard }}
+          path: |
+            ifc43/shard-output/
+            ifc43/collector-${{ matrix.shard }}.json
+          retention-days: 1
+
+  # ── Job 4 ──────────────────────────────────────────────────────────────────
+  # Merge shard outputs, render listing/index pages with the combined collector
+  # data, cache the final HTML tarball, then push to the output repo.
+  assemble:
+    needs: [check-cache, prepare, render]
+    # Run on cache-hit (skip-to-publish) OR on cache-miss when render didn't
+    # outright fail. We use `!= 'failure'` instead of `== 'success'` so the
+    # job still runs when render is 'skipped' on cache-hit; the explicit
+    # verify step below catches partial-shard failures with a loud error.
+    if: always() && (needs.check-cache.outputs.hit == 'true' || (needs.check-cache.outputs.hit != 'true' && needs.render.result != 'failure'))
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    env:
+      TRANSLATIONS_SRC_DIR: ${{ github.workspace }}/translations/translations
+      TRANSLATIONS_BUILD_DIR: ${{ github.workspace }}/translations-build
+      PO_HASH_PATH: ${{ github.workspace }}/translations-build/po_hash_map.json
+    steps:
+      - name: Verify render shards succeeded (cache-miss path only)
+        if: needs.check-cache.outputs.hit != 'true'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          # `fail-fast: false` lets shards run to completion, but GHA aggregates
+          # the matrix result: 'success' iff all shards passed. Anything else
+          # (failure, cancelled, skipped) means we cannot safely assemble.
+          if [ "${{ needs.render.result }}" != "success" ]; then
+            echo "::error::render matrix did not succeed: result=${{ needs.render.result }}"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          path: ifc43
+          fetch-depth: 1
+
+      - name: Set target site directory
+        shell: bash
+        run: |
+          set -euxo pipefail
+          case "${GITHUB_REF_NAME}" in
+            ifc4.3-main)
+              echo "TARGET_SITE_DIR=${GITHUB_WORKSPACE}/output-repo/IFC/RELEASE/IFC4_3" >> "$GITHUB_ENV"
+              ;;
+            ifc4.4-main)
+              echo "TARGET_SITE_DIR=${GITHUB_WORKSPACE}/output-repo/IFC/RELEASE/IFC4_4" >> "$GITHUB_ENV"
+              ;;
+            *)
+              echo "Unsupported branch: ${GITHUB_REF_NAME}"
+              exit 1
+              ;;
+          esac
+
+      - name: Capture source commit message
+        working-directory: ifc43
+        shell: bash
+        run: |
+          set -euxo pipefail
+          # Random heredoc delimiter so a commit message containing a bare
+          # "EOF" line can't terminate the heredoc early and pollute GITHUB_ENV.
+          DELIM="EOF_$(openssl rand -hex 16)"
+          {
+            echo "SOURCE_COMMIT_MESSAGE<<${DELIM}"
+            git log -1 --pretty=%B
+            echo "${DELIM}"
+          } >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v4
+        with:
+          repository: buildingSMART/IFC4.3.x-output-2
+          path: output-repo
+          fetch-depth: 1
+          token: ${{ secrets.OUTPUT_2_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: ifc43/code/requirements.txt
+
+      - name: Install system dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y graphviz rsync unzip
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install wheel setuptools
+          python -m pip install --no-build-isolation "PyYAML==6.0"
+          python -m pip install reversestem
+          python -m pip install -r ifc43/code/requirements.txt nltk
+          python -m pip install ifcopenshell
+
+      # ── Cache hit path ──────────────────────────────────────────────────────
+      - name: Restore cached HTML
+        if: needs.check-cache.outputs.hit == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: html-output.tar
+          key: ${{ needs.check-cache.outputs.cache-key }}
+
+      - name: Unpack cached HTML
+        if: needs.check-cache.outputs.hit == 'true'
+        shell: bash
+        run: |
+          mkdir -p ifc43/output/html
+          tar -xf html-output.tar -C ifc43/output/html
+
+      # ── Cache miss path ─────────────────────────────────────────────────────
+      - name: Download all shard outputs
+        if: needs.check-cache.outputs.hit != 'true'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: html-shard-*
+          path: ifc43/shards/
+          merge-multiple: false
+
+      - name: Download generator outputs
+        if: needs.check-cache.outputs.hit != 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: generator-output
+          path: ifc43/output/
+
+      - name: Check out translations
+        if: needs.check-cache.outputs.hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: buildingSMART/IFC4.3.x-output
+          ref: translations
+          path: translations
+          fetch-depth: 1
+
+      - name: Cache compiled translations
+        if: needs.check-cache.outputs.hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.TRANSLATIONS_BUILD_DIR }}
+          # No restore-keys fallback (see render job): a stale build from a
+          # different .po set is worse than recompiling.
+          key: translations-${{ hashFiles('translations/translations/**/*.po') }}
+
+      - name: Check out sample models
+        if: needs.check-cache.outputs.hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: buildingSMART/IFC4.3.x-sample-models
+          path: examples
+          fetch-depth: 1
+
+      - name: Merge shards and render listings + search index
+        if: needs.check-cache.outputs.hit != 'true'
+        working-directory: ifc43/code
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p ../output/html
+
+          # Sanity check: shards by construction render disjoint paths (CRC32
+          # hash % N == shard_i). Count files per shard and verify the merged
+          # total equals the sum — any overlap means the sharding logic is
+          # broken and would silently drop pages.
+          total_shard_files=0
+          for d in ../shards/html-shard-*/shard-output; do
+            count=$(find "$d" -type f | wc -l)
+            echo "  ${d##*/}: $count files"
+            total_shard_files=$((total_shard_files + count))
+          done
+          echo "Total across all shards: $total_shard_files"
+
+          for d in ../shards/html-shard-*/shard-output; do
+            rsync -a "$d/" ../output/html/
+          done
+
+          merged_count=$(find ../output/html -type f | wc -l)
+          if [ "$merged_count" -lt "$total_shard_files" ]; then
+            # Overlap means two shards rendered the same page → one was
+            # silently dropped during rsync. That's data loss, not a warning.
+            echo "::error::Shards overlap: merged ($merged_count) < sum of shards ($total_shard_files). The CRC-based shard filter is broken."
+            exit 1
+          fi
+
+          # Sort the collector list so the assemble step sees the same input
+          # order on every run regardless of filesystem/locale. Use sort -V so
+          # we get natural ordering (collector-2 < collector-10) even if shard
+          # count ever exceeds 9.
+          COLLECTORS=$(ls ../shards/html-shard-*/collector-*.json | sort -V | paste -sd,)
+          python -m generators.html \
+            --output ../output/html \
+            --skip-content \
+            --collector-inputs "$COLLECTORS" \
+            -j 4
+
+      - name: Pack and save HTML cache
+        if: needs.check-cache.outputs.hit != 'true'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          tar -cf html-output.tar -C ifc43/output/html .
+
+      # ── Publish ─────────────────────────────────────────────────────────────
+      # Order matters: the HTML cache must only be saved AFTER a successful
+      # push. Otherwise a push failure (network blip, force-push race, etc.)
+      # leaves a populated cache pointing to output that was never published,
+      # and the next run hits cache → skips render → reaches "No output
+      # changes to commit" → exits 0 → cache stays valid forever, push never
+      # reattempted. Saving cache last makes failure self-healing.
       - name: Sync site into output repository
         shell: bash
         run: |
           set -euxo pipefail
+          # `rsync --delete` against an empty TARGET_SITE_DIR would wipe the
+          # parent. Assert it's set before doing anything dangerous.
+          : "${TARGET_SITE_DIR:?TARGET_SITE_DIR must be set by the prior step}"
           mkdir -p "$TARGET_SITE_DIR"
           rsync -a --delete "${GITHUB_WORKSPACE}/ifc43/output/html/" "${TARGET_SITE_DIR}/"
 
@@ -161,11 +464,24 @@ jobs:
         run: |
           set -euxo pipefail
           git config user.name "bSI-Bot"
-          git config user.email ${{ secrets.BSI_BOT_EMAIL }}
+          git config user.email "${{ secrets.BSI_BOT_EMAIL }}"
           git add -A "${TARGET_SITE_DIR}"
           if git diff --cached --quiet; then
             echo "No output changes to commit."
             exit 0
           fi
           git commit -m "${SOURCE_COMMIT_MESSAGE}"
+          # Defensive: a parallel publish on the sibling branch (ifc4.3-main
+          # vs ifc4.4-main) writes to a disjoint subdir of the same output
+          # repo (IFC4_3/ vs IFC4_4/) but advances the same HEAD. Rebase to
+          # integrate before pushing so the second push isn't rejected as
+          # non-fast-forward.
+          git pull --rebase --autostash origin HEAD
           git push
+
+      - name: Store HTML cache
+        if: needs.check-cache.outputs.hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: html-output.tar
+          key: ${{ needs.check-cache.outputs.cache-key }}
