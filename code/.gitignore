@@ -7,3 +7,8 @@ entity_supertype.json
 entity_to_package.json
 hierarchy.json
 inheritance_listing.txt
+
+# Written by code/generators/html/builder.py::_write_listing_json
+listing_figures.json
+listing_references.json
+listing_tables.json

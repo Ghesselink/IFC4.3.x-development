@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from html import escape
 import re
 import sys
-import uuid
 from pathlib import Path
 from typing import Iterable
 from urllib.parse import urljoin, urlparse, urlunparse
@@ -293,6 +292,7 @@ class HtmlRefiner:
             return
 
         numberer = FigureNumberer()
+        _anon = 0
 
         for img in main_content.find_all(["img", "svg"]):
             parent = img.parent
@@ -328,7 +328,8 @@ class HtmlRefiner:
                 parent.append(figcaption)
             if not has_caption:
                 figcaption = soup.new_tag("figcaption")
-                token = str(uuid.uuid4())
+                token = f"anon-{_anon:04d}"
+                _anon += 1
                 figcaption.string = "Figure " + token
                 parent.append(figcaption)
 
@@ -343,7 +344,8 @@ class HtmlRefiner:
                 figure.append(figcaption)
             else:
                 figcaption = soup.new_tag("figcaption")
-                token = str(uuid.uuid4())
+                token = f"anon-{_anon:04d}"
+                _anon += 1
                 figcaption.string = "Table " + token
                 figure.append(figcaption)
         current_parent_number = None
