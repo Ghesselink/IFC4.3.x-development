@@ -788,6 +788,17 @@ class StaticTemplateRenderer(markdown_mixin):
                         "properties": [p["name"] for p in properties]
                     })
 
+        already_named = {p["name"] for p in psets}
+        for name, pdef in self.structure['pset_definitions'].items():
+            if name in already_named:
+                continue
+            if any(entity in supertype_chain for entity in pdef.get('applicability', [])):
+                psets.append({
+                    "name": name,
+                    "predefined_type": None,
+                    "properties": [p["name"] for p in pdef["properties"]]
+                })
+
         if psets:
             return {
                 "number": self.numberer.generate(),
