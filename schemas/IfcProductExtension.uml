@@ -217,6 +217,16 @@
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcSpatialZoneTypeEnum_VENTILATION" name="VENTILATION"/>
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcSpatialZoneTypeEnum_USERDEFINED" name="USERDEFINED"/>
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcSpatialZoneTypeEnum_NOTDEFINED" name="NOTDEFINED"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_jeomgFXPEfG4C82eD2nGUg" name="TESTEDZONE"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_m1SZQFXPEfG4C82eD2nGUg" name="SERVICE"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_nnM-YFXPEfG4C82eD2nGUg" name="MAPPEDZONE"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_oZpvAFXPEfG4C82eD2nGUg" name="LINING"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_pZFLsFXPEfG4C82eD2nGUg" name="INVERT"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_q9C40FXPEfG4C82eD2nGUg" name="ANNULARGAP"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_tDjSUFXPEfG4C82eD2nGUg" name="INTERIOR"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_uRAj8FXPEfG4C82eD2nGUg" name="INSTALLATION"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_vhRR8FXPEfG4C82eD2nGUg" name="COMPARTMENT"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_wTeK8FXPEfG4C82eD2nGUg" name="CLEARANCE"/>
     </packagedElement>
     <packagedElement xmi:type="uml:Enumeration" xmi:id="en_IfcTransportElementTypeEnum" name="IfcTransportElementTypeEnum">
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcTransportElementTypeEnum_CRANEWAY" name="CRANEWAY"/>
@@ -3882,6 +3892,45 @@ AND
     <packagedElement xmi:type="uml:Class" xmi:id="_-fAO0FXKEfG4C82eD2nGUg" name="IfcElementAssemblyTypeEnum.DUCTBANK">
       <generalization xmi:type="uml:Generalization" xmi:id="_-fAO0VXKEfG4C82eD2nGUg" general="cl_IfcElementAssembly"/>
       <generalization xmi:type="uml:Generalization" xmi:id="_-fAO0lXKEfG4C82eD2nGUg" general="cl_IfcElementAssemblyType"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_y2ndIFXPEfG4C82eD2nGUg" name="IfcSpatialZoneTypeEnum.CLEARANCE">
+      <generalization xmi:type="uml:Generalization" xmi:id="_y2ndIVXPEfG4C82eD2nGUg" general="cl_IfcSpatialZone"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_y2ndIlXPEfG4C82eD2nGUg" general="cl_IfcSpatialZoneType"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_y7CqIFXPEfG4C82eD2nGUg" name="IfcSpatialZoneTypeEnum.COMPARTMENT">
+      <generalization xmi:type="uml:Generalization" xmi:id="_y7CqIVXPEfG4C82eD2nGUg" general="cl_IfcSpatialZone"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_y7CqIlXPEfG4C82eD2nGUg" general="cl_IfcSpatialZoneType"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_y_TfEFXPEfG4C82eD2nGUg" name="IfcSpatialZoneTypeEnum.INSTALLATION">
+      <generalization xmi:type="uml:Generalization" xmi:id="_y_TfEVXPEfG4C82eD2nGUg" general="cl_IfcSpatialZone"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_y_TfElXPEfG4C82eD2nGUg" general="cl_IfcSpatialZoneType"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_zDW4oFXPEfG4C82eD2nGUg" name="IfcSpatialZoneTypeEnum.INTERIOR">
+      <generalization xmi:type="uml:Generalization" xmi:id="_zDW4oVXPEfG4C82eD2nGUg" general="cl_IfcSpatialZone"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_zDW4olXPEfG4C82eD2nGUg" general="cl_IfcSpatialZoneType"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_zInMEFXPEfG4C82eD2nGUg" name="IfcSpatialZoneTypeEnum.ANNULARGAP">
+      <generalization xmi:type="uml:Generalization" xmi:id="_zInMEVXPEfG4C82eD2nGUg" general="cl_IfcSpatialZone"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_zInMElXPEfG4C82eD2nGUg" general="cl_IfcSpatialZoneType"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_zNCZEFXPEfG4C82eD2nGUg" name="IfcSpatialZoneTypeEnum.INVERT">
+      <generalization xmi:type="uml:Generalization" xmi:id="_zNCZEVXPEfG4C82eD2nGUg" general="cl_IfcSpatialZone"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_zNCZElXPEfG4C82eD2nGUg" general="cl_IfcSpatialZoneType"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_zRs2oFXPEfG4C82eD2nGUg" name="IfcSpatialZoneTypeEnum.LINING">
+      <generalization xmi:type="uml:Generalization" xmi:id="_zRs2oVXPEfG4C82eD2nGUg" general="cl_IfcSpatialZone"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_zRs2olXPEfG4C82eD2nGUg" general="cl_IfcSpatialZoneType"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_zV5aIFXPEfG4C82eD2nGUg" name="IfcSpatialZoneTypeEnum.MAPPEDZONE">
+      <generalization xmi:type="uml:Generalization" xmi:id="_zV5aIVXPEfG4C82eD2nGUg" general="cl_IfcSpatialZone"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_zV5aIlXPEfG4C82eD2nGUg" general="cl_IfcSpatialZoneType"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_za2LkFXPEfG4C82eD2nGUg" name="IfcSpatialZoneTypeEnum.SERVICE">
+      <generalization xmi:type="uml:Generalization" xmi:id="_za2LkVXPEfG4C82eD2nGUg" general="cl_IfcSpatialZone"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_za2LklXPEfG4C82eD2nGUg" general="cl_IfcSpatialZoneType"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_ze0FkFXPEfG4C82eD2nGUg" name="IfcSpatialZoneTypeEnum.TESTEDZONE">
+      <generalization xmi:type="uml:Generalization" xmi:id="_ze0FkVXPEfG4C82eD2nGUg" general="cl_IfcSpatialZone"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_ze0FklXPEfG4C82eD2nGUg" general="cl_IfcSpatialZoneType"/>
     </packagedElement>
   </packagedElement>
 </uml:Model>
