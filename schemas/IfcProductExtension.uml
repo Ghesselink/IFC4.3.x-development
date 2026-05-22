@@ -102,6 +102,10 @@
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcElementAssemblyTypeEnum_TURNOUTPANEL" name="TURNOUTPANEL"/>
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcElementAssemblyTypeEnum_USERDEFINED" name="USERDEFINED"/>
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcElementAssemblyTypeEnum_NOTDEFINED" name="NOTDEFINED"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_mZJpIFXKEfG4C82eD2nGUg" name="DUCTBANK"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_42qtUFXKEfG4C82eD2nGUg" name="PRESUPPORTFACE"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_56zq4FXKEfG4C82eD2nGUg" name="PRESUPPORTVAULT"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_6ocM8FXKEfG4C82eD2nGUg" name="RING"/>
     </packagedElement>
     <packagedElement xmi:type="uml:Enumeration" xmi:id="en_IfcElementCompositionEnum" name="IfcElementCompositionEnum">
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcElementCompositionEnum_COMPLEX" name="COMPLEX"/>
@@ -3862,6 +3866,22 @@ AND
     </packagedElement>
     <packagedElement xmi:type="uml:Class" xmi:id="_zMGekFXHEfG4C82eD2nGUg" name="IfcBuiltSystemTypeEnum.TUNNEL_LINING">
       <generalization xmi:type="uml:Generalization" xmi:id="_zMGekVXHEfG4C82eD2nGUg" general="cl_IfcBuiltSystem"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_-Fh-4FXKEfG4C82eD2nGUg" name="IfcElementAssemblyTypeEnum.RING">
+      <generalization xmi:type="uml:Generalization" xmi:id="_-Fh-4VXKEfG4C82eD2nGUg" general="cl_IfcElementAssembly"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_-Fh-4lXKEfG4C82eD2nGUg" general="cl_IfcElementAssemblyType"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_-XwXUFXKEfG4C82eD2nGUg" name="IfcElementAssemblyTypeEnum.PRESUPPORTVAULT">
+      <generalization xmi:type="uml:Generalization" xmi:id="_-XwXUVXKEfG4C82eD2nGUg" general="cl_IfcElementAssembly"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_-XwXUlXKEfG4C82eD2nGUg" general="cl_IfcElementAssemblyType"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_-bu4YFXKEfG4C82eD2nGUg" name="IfcElementAssemblyTypeEnum.PRESUPPORTFACE">
+      <generalization xmi:type="uml:Generalization" xmi:id="_-bu4YVXKEfG4C82eD2nGUg" general="cl_IfcElementAssembly"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_-bu4YlXKEfG4C82eD2nGUg" general="cl_IfcElementAssemblyType"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_-fAO0FXKEfG4C82eD2nGUg" name="IfcElementAssemblyTypeEnum.DUCTBANK">
+      <generalization xmi:type="uml:Generalization" xmi:id="_-fAO0VXKEfG4C82eD2nGUg" general="cl_IfcElementAssembly"/>
+      <generalization xmi:type="uml:Generalization" xmi:id="_-fAO0lXKEfG4C82eD2nGUg" general="cl_IfcElementAssemblyType"/>
     </packagedElement>
   </packagedElement>
 </uml:Model>
