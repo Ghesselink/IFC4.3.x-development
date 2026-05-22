@@ -23,6 +23,9 @@
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcEarthworksCutTypeEnum_TRENCH" name="TRENCH"/>
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcEarthworksCutTypeEnum_USERDEFINED" name="USERDEFINED"/>
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcEarthworksCutTypeEnum_NOTDEFINED" name="NOTDEFINED"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_JOtFAFXGEfG4C82eD2nGUg" name="CONFINEDOPENEXCAVATION"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_KDoh4FXGEfG4C82eD2nGUg" name="BRACEDOPENEXCAVATION"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_LY5EoFXGEfG4C82eD2nGUg" name="ANCHOREDOPENEXCAVATION"/>
     </packagedElement>
     <packagedElement xmi:type="uml:Enumeration" xmi:id="en_IfcEarthworksFillTypeEnum" name="IfcEarthworksFillTypeEnum">
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcEarthworksFillTypeEnum_BACKFILL" name="BACKFILL"/>
@@ -1271,5 +1274,14 @@
       <supplier xmi:type="uml:Class" href="IfcStructuralElementsDomain.uml#cl_IfcSurfaceFeature"/>
     </packagedElement>
     <packagedElement xmi:type="uml:Dependency" xmi:id="dp_Qto_VolumetricStratumBaseQuantities_IfcGeotechnicalStratum" client="cl_Qto_VolumetricStratumBaseQuantities" supplier="cl_IfcGeotechnicalStratum"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_6VSZsFXFEfG4C82eD2nGUg" name="IfcEarthworksCutTypeEnum.CONFINEDOPENEXCAVATION">
+      <generalization xmi:type="uml:Generalization" xmi:id="_6VSZsVXFEfG4C82eD2nGUg" general="cl_IfcEarthworksCut"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_OB5uQFXGEfG4C82eD2nGUg" name="IfcEarthworksCutTypeEnum.ANCHOREDOPENEXCAVATION">
+      <generalization xmi:type="uml:Generalization" xmi:id="_OB5uQVXGEfG4C82eD2nGUg" general="cl_IfcEarthworksCut"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_OUtVgFXGEfG4C82eD2nGUg" name="IfcEarthworksCutTypeEnum.BRACEDOPENEXCAVATION">
+      <generalization xmi:type="uml:Generalization" xmi:id="_OUtVgVXGEfG4C82eD2nGUg" general="cl_IfcEarthworksCut"/>
+    </packagedElement>
   </packagedElement>
 </uml:Model>
