@@ -65,6 +65,11 @@
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcBuiltSystemTypeEnum_TRANSPORT" name="TRANSPORT"/>
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcBuiltSystemTypeEnum_USERDEFINED" name="USERDEFINED"/>
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcBuiltSystemTypeEnum_NOTDEFINED" name="NOTDEFINED"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_r_P2UFXHEfG4C82eD2nGUg" name="TUNNEL_LINING"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_tH12EFXHEfG4C82eD2nGUg" name="TUNNEL_PRESUPPORT"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_tr4-UFXHEfG4C82eD2nGUg" name="TUNNEL_SUPPORT"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_uo-RoFXHEfG4C82eD2nGUg" name="FIREPROTECTION"/>
+      <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="_vWQ1cFXHEfG4C82eD2nGUg" name="WATERPROOFING"/>
     </packagedElement>
     <packagedElement xmi:type="uml:Enumeration" xmi:id="en_IfcElementAssemblyTypeEnum" name="IfcElementAssemblyTypeEnum">
       <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="en_IfcElementAssemblyTypeEnum_ABUTMENT" name="ABUTMENT"/>
@@ -3843,5 +3848,20 @@ AND
     <packagedElement xmi:type="uml:Dependency" xmi:id="dp_Qto_ProjectionElementBaseQuantities_IfcProjectionElement" client="cl_Qto_ProjectionElementBaseQuantities" supplier="cl_IfcProjectionElement"/>
     <packagedElement xmi:type="uml:Dependency" xmi:id="dp_Qto_SiteBaseQuantities_IfcSite" client="cl_Qto_SiteBaseQuantities" supplier="cl_IfcSite"/>
     <packagedElement xmi:type="uml:Dependency" xmi:id="dp_Qto_SpaceBaseQuantities_IfcSpace" client="cl_Qto_SpaceBaseQuantities" supplier="cl_IfcSpace"/>
+    <packagedElement xmi:type="uml:Class" xmi:id="_xfX3AFXHEfG4C82eD2nGUg" name="IfcBuiltSystemTypeEnum.WATERPROOFING">
+      <generalization xmi:type="uml:Generalization" xmi:id="_xfX3AVXHEfG4C82eD2nGUg" general="cl_IfcBuiltSystem"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_x5LeIFXHEfG4C82eD2nGUg" name="IfcBuiltSystemTypeEnum.FIREPROTECTION">
+      <generalization xmi:type="uml:Generalization" xmi:id="_x5LeIVXHEfG4C82eD2nGUg" general="cl_IfcBuiltSystem"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_yS7a4FXHEfG4C82eD2nGUg" name="IfcBuiltSystemTypeEnum.TUNNEL_SUPPORT">
+      <generalization xmi:type="uml:Generalization" xmi:id="_yS7a4VXHEfG4C82eD2nGUg" general="cl_IfcBuiltSystem"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_yoy9MFXHEfG4C82eD2nGUg" name="IfcBuiltSystemTypeEnum.TUNNEL_PRESUPPORT">
+      <generalization xmi:type="uml:Generalization" xmi:id="_yoy9MVXHEfG4C82eD2nGUg" general="cl_IfcBuiltSystem"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Class" xmi:id="_zMGekFXHEfG4C82eD2nGUg" name="IfcBuiltSystemTypeEnum.TUNNEL_LINING">
+      <generalization xmi:type="uml:Generalization" xmi:id="_zMGekVXHEfG4C82eD2nGUg" general="cl_IfcBuiltSystem"/>
+    </packagedElement>
   </packagedElement>
 </uml:Model>
