@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   publish:
-    if: ${{ github.server_url == 'https://github.com' && github.repository == 'buildingSMART/IFC4.x-development' }}
+    if: ${{ github.server_url == 'https://github.com' && (github.repository == 'buildingSMART/IFC4.x-development' || github.repository == 'Ghesselink/IFC4.3.x-development') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 120
     env:
@@ -38,6 +38,10 @@ jobs:
               ;;
             ifc4.4-main)
               echo "TARGET_SITE_DIR=${GITHUB_WORKSPACE}/output-repo/IFC/DEV/IFC4_4/HTML" >> "$GITHUB_ENV"
+              ;;
+            preview/*)
+              # fork test runs: publish under IFC/PREVIEW/<branch tail> on the preview site
+              echo "TARGET_SITE_DIR=${GITHUB_WORKSPACE}/output-repo/IFC/PREVIEW/${GITHUB_REF_NAME#preview/}" >> "$GITHUB_ENV"
               ;;
             *)
               echo "Unsupported branch: ${GITHUB_REF_NAME}"
@@ -80,7 +84,7 @@ jobs:
       - name: Check out output repository
         uses: actions/checkout@v4
         with:
-          repository: buildingSMART/Standards-builds
+          repository: ghesselink/IFC4.3.x-output-2   # fork test: the Pages site behind ifc44-docs.geerthesselink.com
           path: output-repo
           fetch-depth: 1
           token: ${{ secrets.OUTPUT_2_TOKEN }}
@@ -194,8 +198,8 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          git config user.name "bSI-Bot"
-          git config user.email ${{ secrets.BSI_BOT_EMAIL }}
+          git config user.name "Ghesselink (publish workflow)"
+          git config user.email "${{ secrets.BSI_BOT_EMAIL || 'ghesselink@users.noreply.github.com' }}"
           git add -A "${TARGET_SITE_DIR}"
           if git diff --cached --quiet; then
             echo "No output changes to commit."
