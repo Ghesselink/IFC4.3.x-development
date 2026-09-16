@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   publish:
-    if: ${{ github.server_url == 'https://github.com' && github.repository == 'buildingSMART/IFC4.x-development' }}
+    if: ${{ github.server_url == 'https://github.com' && (github.repository == 'buildingSMART/IFC4.x-development' || github.repository == 'Ghesselink/IFC4.3.x-development') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 120
     env:
@@ -39,6 +39,10 @@ jobs:
             ifc4.4-main)
               echo "TARGET_SITE_DIR=${GITHUB_WORKSPACE}/output-repo/IFC/DEV/IFC4_4/HTML" >> "$GITHUB_ENV"
               ;;
+            preview/*)
+              # fork test runs: publish under IFC/PREVIEW/<branch tail> on the preview site
+              echo "TARGET_SITE_DIR=${GITHUB_WORKSPACE}/output-repo/IFC/PREVIEW/${GITHUB_REF_NAME#preview/}" >> "$GITHUB_ENV"
+              ;;
             *)
               echo "Unsupported branch: ${GITHUB_REF_NAME}"
               exit 1
@@ -49,7 +53,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: ifc43
-          fetch-depth: 1
+          # full history: git_history.page_history() derives the contributors
+          # footer from git log; with fetch-depth 1 every page shows one contributor
+          fetch-depth: 0
 
       - name: Capture source commit message
         working-directory: ifc43
@@ -80,7 +86,7 @@ jobs:
       - name: Check out output repository
         uses: actions/checkout@v4
         with:
-          repository: buildingSMART/Standards-builds
+          repository: ghesselink/IFC4.3.x-output-2   # fork test: the Pages site behind ifc44-docs.geerthesselink.com
           path: output-repo
           fetch-depth: 1
           token: ${{ secrets.OUTPUT_2_TOKEN }}
@@ -108,6 +114,9 @@ jobs:
           python -m pip install --no-build-isolation "PyYAML==6.0"
           python -m pip install --no-build-isolation reversestem
           python -m pip install -r ifc43/code/requirements.txt nltk
+          # runtime dependencies of the IfcOpenShell build below that the PyPI wheel
+          # used to pull in transitively (ifcopenshell/file.py imports typing_extensions)
+          python -m pip install typing_extensions lark
           
           # get a recent ifcopenshell 0.8 build with the latest ifcopenshell.mvd changes
           curl --silent --show-error --retry 5 -o /tmp/ifcopenshell_python.zip https://s3.amazonaws.com/ifcopenshell-builds/ifcopenshell-python-`python3 -c 'import sys;print("".join(map(str, sys.version_info[0:2])))'`-v0.8.6-f8da61b-linux64.zip
@@ -194,8 +203,8 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          git config user.name "bSI-Bot"
-          git config user.email ${{ secrets.BSI_BOT_EMAIL }}
+          git config user.name "Ghesselink (publish workflow)"
+          git config user.email "${{ secrets.BSI_BOT_EMAIL || 'ghesselink@users.noreply.github.com' }}"
           git add -A "${TARGET_SITE_DIR}"
           if git diff --cached --quiet; then
             echo "No output changes to commit."
