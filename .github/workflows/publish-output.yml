@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   publish:
-    if: ${{ github.server_url == 'https://github.com' && github.repository == 'buildingSMART/IFC4.x-development' }}
+    if: ${{ github.server_url == 'https://github.com' && (github.repository == 'buildingSMART/IFC4.x-development' || github.repository == 'Ghesselink/IFC4.3.x-development') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 180
     env:
@@ -138,7 +138,7 @@ jobs:
       - name: Check out output repository
         uses: actions/checkout@v4
         with:
-          repository: buildingSMART/Standards-builds
+          repository: ghesselink/IFC4.3.x-output-2   # fork test: the Pages site behind ifc44-docs.geerthesselink.com
           path: output-repo
           fetch-depth: 1
           token: ${{ secrets.OUTPUT_2_TOKEN }}
