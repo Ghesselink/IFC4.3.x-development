@@ -34,13 +34,14 @@ spec_version_string_full = f"{spec_version_string} build {suffix}"
 # Development and preview builds carry the publication level and the date of the
 # last schema change, e.g. IFC4X4_PREVIEW_20260525, so that a draft schema, and
 # every IFC file written against it, can never be mistaken for the release.
-# The date is the author date of the last commit that touched schemas/*.uml: it
-# does not move on documentation-only commits, nor on the preview branch, where
-# the pending pull requests are merged at build time.
+# The date is the author date of the last non-merge commit that touched
+# schemas/*.uml: it does not move on documentation-only commits. Merge commits are
+# skipped because the preview build merges the pending pull requests at build time;
+# those merge commits carry the build date and would rename the schema on every run.
 SCHEMA_LEVELS = {'DEVELOPMENT': 'DEV', 'PREVIEW': 'PREVIEW'}
 schema_level = '' if status == 'OFFICIAL' else SCHEMA_LEVELS.get(status, 'DRAFT')
 try:
-    schema_date = _git('log', '-1', '--format=%as', '--', 'schemas/*.uml').replace('-', '')
+    schema_date = _git('log', '-1', '--no-merges', '--format=%as', '--', 'schemas/*.uml').replace('-', '')
     assert len(schema_date) == 8 and schema_date.isdigit()
 except:
     # no git history (shallow checkout): fall back to the build date
