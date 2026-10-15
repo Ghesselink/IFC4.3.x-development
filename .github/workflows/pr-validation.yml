@@ -58,6 +58,13 @@ jobs:
         with:
           fetch-depth: 0   # need base ref for diff
 
+      - name: Check out tooling
+        uses: actions/checkout@v4
+        with:
+          repository: Ghesselink/IFC4.x-tooling
+          ref: main
+          path: code
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -180,6 +187,8 @@ jobs:
             echo "Cache miss -- generating baseline from BASE_REF=$BASE_REF"
             BASE_TMP=$(mktemp -d)
             git worktree add "$BASE_TMP" "$BASE_REF"
+            # the tooling lives in its own repository; the base worktree has no code/ of its own
+            [ -d "$BASE_TMP/code" ] || cp -r "$GITHUB_WORKSPACE/code" "$BASE_TMP/code"
             cd "$BASE_TMP/code"
             python -m generators.express ../schemas/ifc4x3_add2.uml \
               -o /tmp/baseline.exp \
