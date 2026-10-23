@@ -1,10 +1,8 @@
-# Web / runtime / services 
-Flask 
-gunicorn
-redis
+# Runtime
 cachetools
 
 # HTML / parsing 
+Jinja2
 beautifulsoup4<4.12
 lxml
 Markdown
@@ -17,10 +15,6 @@ xmlschema
 Babel
 polib
 python-slugify
-
-# Search 
-pysolr         
-solrq        
 
 # Graphs / diagrams
 pydot
