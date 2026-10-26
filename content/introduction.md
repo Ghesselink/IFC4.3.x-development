@@ -28,10 +28,10 @@ The IFC specification includes terms, concepts and data specification items that
 Entity inheritance diagrams use the following colour coding:
 
 <ul class="classes legend">
-<li class="abstract"><a>IfcEntity</a> light grey box: abstract entity</li>
-<li><a>IfcEntity</a> dark grey box: instantiable entity</li>
-<li class="current"><a>IfcEntity</a> blue box: the entity documented on the page</li>
-<li class="deprecated"><a>IfcEntity</a> red box: deprecated entity</li>
+<li class="abstract"><a>Abstract entity</a></li>
+<li><a>Instantiable entity</a></li>
+<li class="current"><a>Entity on this page</a></li>
+<li class="deprecated"><a>Deprecated entity</a></li>
 </ul>
 
 Hierarchical entity class relationships are indicated with an upwards blue arrow (<span class="legend-arrow"><i data-feather="arrow-up"></i></span>).
