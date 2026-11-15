@@ -11,6 +11,7 @@ The updated builds are automatically published here:
 - GitHub Repository of all openBIM standards, both official releases and in development: https://github.com/buildingSMART/Standards-builds (previously: ~~https://github.com/buildingsmart/ifc4.3.x-output~~)
 - The HTML version: https://standards.buildingsmart.org/IFC/DEV/IFC4_3/ (previously: ~~http://ifc43-docs.standards.buildingsmart.org/~~)
 - The translation files: https://github.com/buildingSMART/IFC-translations
+- The code that generates the builds: https://github.com/buildingSMART/IFC4.x-tooling
 
 ___
 
