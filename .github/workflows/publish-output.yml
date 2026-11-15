@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   publish:
-    if: ${{ github.server_url == 'https://github.com' && github.repository == 'buildingSMART/IFC4.x-development' }}
+    if: ${{ github.server_url == 'https://github.com' && (github.repository == 'buildingSMART/IFC4.x-development' || github.repository == 'Ghesselink/IFC4.3.x-development') }}
     runs-on: ubuntu-22.04
     timeout-minutes: 120
     env:
@@ -39,6 +39,10 @@ jobs:
             ifc4.4-main)
               echo "TARGET_SITE_DIR=${GITHUB_WORKSPACE}/output-repo/IFC/DEV/IFC4_4/HTML" >> "$GITHUB_ENV"
               ;;
+            preview/*)
+              # fork test runs: publish under IFC/PREVIEW/<branch tail> on the preview site
+              echo "TARGET_SITE_DIR=${GITHUB_WORKSPACE}/output-repo/IFC/PREVIEW/${GITHUB_REF_NAME#preview/}" >> "$GITHUB_ENV"
+              ;;
             *)
               echo "Unsupported branch: ${GITHUB_REF_NAME}"
               exit 1
@@ -54,6 +58,17 @@ jobs:
           path: ifc43
           fetch-depth: 0
 
+      # The tooling lives in its own repository and is checked out where code/
+      # used to be, so paths and working directories stay the same.
+      - name: Check out tooling
+        uses: actions/checkout@v4
+        with:
+          repository: Ghesselink/IFC4.x-tooling
+          ref: main
+          path: ifc43/code
+          fetch-depth: 1
+          persist-credentials: false
+
       - name: Capture source commit message
         working-directory: ifc43
         shell: bash
@@ -62,6 +77,8 @@ jobs:
           {
             echo "SOURCE_COMMIT_MESSAGE<<EOF"
             git log -1 --pretty=%B
+            echo
+            echo "Tooling: $(git -C code rev-parse --short HEAD)"
             echo "EOF"
           } >> "$GITHUB_ENV"
 
@@ -83,7 +100,7 @@ jobs:
       - name: Check out output repository
         uses: actions/checkout@v4
         with:
-          repository: buildingSMART/Standards-builds
+          repository: ghesselink/IFC4.3.x-output-2   # fork test: the Pages site behind ifc44-docs.geerthesselink.com
           path: output-repo
           fetch-depth: 1
           token: ${{ secrets.OUTPUT_2_TOKEN }}
@@ -124,6 +141,15 @@ jobs:
         run: |
           set -euxo pipefail
           python -m generators ../schemas/ifc4x3_add2.uml --output ../output
+
+      # The change log compares with the earlier IFC releases. They are published in
+      # Standards-builds, which is checked out above as the output repository.
+      - name: Fetch earlier IFC releases
+        working-directory: ifc43/code
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python fetch_reference_schemas.py .. ../../output-repo
 
       - name: Determine EXPRESS parse cache key
         id: parse-cache-key
@@ -194,8 +220,8 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          git config user.name "bSI-Bot"
-          git config user.email ${{ secrets.BSI_BOT_EMAIL }}
+          git config user.name "Ghesselink (publish workflow)"
+          git config user.email "${{ secrets.BSI_BOT_EMAIL || 'ghesselink@users.noreply.github.com' }}"
           git add -A "${TARGET_SITE_DIR}"
           if git diff --cached --quiet; then
             echo "No output changes to commit."

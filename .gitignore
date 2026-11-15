@@ -2,15 +2,10 @@ __pycache__
 output/
 *.swp
 .vscode/settings.json
-code/abstract_entities.json
-code/deprecated_entities.json
-code/entity_attributes.json
-code/entity_definitions.json
-code/entity_where_clauses.json
-code/examples_by_type.json
-code/IFC.exp
-code/pset_definitions.json
-code/type_values.json
+# the tooling (buildingSMART/IFC4.x-tooling), checked out here by the workflows
+/code/
+# earlier IFC releases for the change log, fetched by code/fetch_reference_schemas.py
+/reference_schemas/
 .vscode/launch.json
 # EXPRESS parse caches written by ifcopenshell.express (pyparsing-version specific)
 *.cache.dat
