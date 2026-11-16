@@ -24,6 +24,7 @@ jobs:
       TRANSLATIONS_SRC_DIR: ${{ github.workspace }}/translations/translations
       TRANSLATIONS_BUILD_DIR: ${{ github.workspace }}/translations-build
       PO_HASH_PATH: ${{ github.workspace }}/translations-build/po_hash_map.json
+      PYTHONHASHSEED: "0"
       PYTHONUNBUFFERED: "1"
 
     steps:
